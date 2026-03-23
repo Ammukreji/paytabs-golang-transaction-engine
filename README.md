@@ -4,7 +4,7 @@ A simplified backend service simulating a payment switch authorization engine. I
 
 ## Setup Instructions
 
-1. Ensure Go is installed on the machine (1.19+ recommended).
+1. Ensure Go is installed on the machine.
 2. Clone the repository and navigate to the project directory:
    ```bash
    cd paytabs-assessment
