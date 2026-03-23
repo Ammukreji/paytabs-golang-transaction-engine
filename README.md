@@ -1,214 +1,160 @@
-# Transaction Processing Engine – Golang Backend Assessment
+# Transaction Processing Engine
 
-## Overview
+A simplified backend service simulating a payment switch authorization engine. It processes card transactions and maintains card balances using a concurrent in-memory storage, built purely with Go's standard libraries.
 
-This project is a backend service that processes card transactions and maintains card balances.
-It simulates a simplified payment authorization engine using in-memory storage and SHA256 PIN authentication.
+## Setup Instructions
 
-The system supports:
+1. Ensure Go is installed on the machine (1.19+ recommended).
+2. Clone the repository and navigate to the project directory:
+   ```bash
+   cd paytabs-assessment
+   ```
+3. Initialize or verify standard modules:
+   ```bash
+   go mod tidy
+   ```
 
-* Withdraw transactions
-* Top-up transactions
-* Balance inquiry
-* Transaction history logging
+## Run Steps
 
----
-
-## Technology Used
-
-* Go (Golang)
-* net/http (REST API)
-* In-memory storage (map)
-* SHA256 hashing
-* UUID for transaction IDs
-
----
-
-## Setup
-
-Install dependencies:
-
-```bash
-go mod tidy
-```
-
----
-
-## Run
-
+To run the application locally, execute the following command:
 ```bash
 go run main.go
 ```
 
-Server starts on:
-
+The terminal will log the following lines indicating a successful startup and database seed:
+```text
+Database seeded with sample card:
+Card Number: 4123456789012345
+Name: John Doe
+PIN: 1234
+Balance: 1000
+Status: ACTIVE
+-------------------------------------------------
+Starting server on port 8080...
 ```
-http://localhost:8080
-```
 
----
+The service is now bound and ready to accept HTTP traffic at `http://localhost:8080`.
 
-## Sample Cards
+## API Examples (cURL)
 
-| Card Number      | PIN  | Balance | Status  |
-| ---------------- | ---- | ------- | ------- |
-| 4123456789012345 | 1234 | 1000    | ACTIVE  |
-| 5123456789012345 | 5678 | 500     | ACTIVE  |
-| 6123456789012345 | 9012 | 200     | BLOCKED |
-
----
-
-## API Endpoints
-
-### 1. Process Transaction
-
-**POST** `/api/transaction`
-
+**1. Process a Withdraw Transaction**
 ```bash
 curl -X POST http://localhost:8080/api/transaction \
-  -H "Content-Type: application/json" \
-  -d '{"cardNumber":"4123456789012345","pin":"1234","type":"withdraw","amount":200}'
+     -H "Content-Type: application/json" \
+     -d '{
+           "cardNumber": "4123456789012345",
+           "pin": "1234",
+           "type": "withdraw",
+           "amount": 200
+         }'
 ```
 
-Success Response:
-
-```json
-{"status":"SUCCESS","respCode":"00","balance":800}
+**2. Process a Topup Transaction**
+```bash
+curl -X POST http://localhost:8080/api/transaction \
+     -H "Content-Type: application/json" \
+     -d '{
+           "cardNumber": "4123456789012345",
+           "pin": "1234",
+           "type": "topup",
+           "amount": 500
+         }'
 ```
 
-Invalid Card:
-
-```json
-{"status":"FAILED","respCode":"05","message":"Invalid card"}
-```
-
-Invalid PIN:
-
-```json
-{"status":"FAILED","respCode":"06","message":"Invalid PIN"}
-```
-
-Insufficient Balance:
-
-```json
-{"status":"FAILED","respCode":"99","message":"Insufficient balance"}
-```
-
----
-
-### 2. Get Balance
-
+**3. Check Current Account Balance**
 ```bash
 curl http://localhost:8080/api/card/balance/4123456789012345
 ```
 
-Response:
-
-```json
-{"cardNumber":"4123456789012345","balance":800}
-```
-
----
-
-### 3. Get Transaction History
-
+**4. View Historical Transactions**
 ```bash
 curl http://localhost:8080/api/card/transactions/4123456789012345
 ```
 
-Response:
+## API Testing (Postman Collection)
+
+To test the endpoints using Postman, copy the JSON configuration below and save it locally as a `postman_collection.json` file. Import this file into Postman to load all paths and payloads ready for execution.
 
 ```json
 {
-  "cardNumber":"4123456789012345",
-  "transactions":[
-    {
-      "transactionId":"uuid",
-      "cardNumber":"4123456789012345",
-      "type":"withdraw",
-      "amount":200,
-      "status":"SUCCESS",
-      "timestamp":"2024-01-15T10:30:00Z"
-    }
-  ]
+	"info": {
+		"name": "Payment Switch API",
+		"description": "API collection for the Transaction Processing Engine.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Process Withdraw Transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"cardNumber\": \"4123456789012345\",\n  \"pin\": \"1234\",\n  \"type\": \"withdraw\",\n  \"amount\": 200\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/transaction",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "transaction"]
+				}
+			}
+		},
+		{
+			"name": "Process Topup Transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"cardNumber\": \"4123456789012345\",\n  \"pin\": \"1234\",\n  \"type\": \"topup\",\n  \"amount\": 500\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/transaction",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "transaction"]
+				}
+			}
+		},
+		{
+			"name": "Get Account Balance",
+			"request": {
+				"method": "GET",
+				"url": {
+					"raw": "http://localhost:8080/api/card/balance/4123456789012345",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "card", "balance", "4123456789012345"]
+				}
+			}
+		},
+		{
+			"name": "Get Transaction History",
+			"request": {
+				"method": "GET",
+				"url": {
+					"raw": "http://localhost:8080/api/card/transactions/4123456789012345",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8080",
+					"path": ["api", "card", "transactions", "4123456789012345"]
+				}
+			}
+		}
+	]
 }
-```
-
----
-
-## API Testing
-
-### Using Curl
-
-Examples are provided above for:
-
-* Transaction
-* Balance
-* Transaction history
-
-### Using Postman
-
-Import the following JSON into Postman to test APIs:
-
-```json
-{
-  "info": {
-    "name": "Transaction Engine API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Process Transaction",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"cardNumber\":\"4123456789012345\",\"pin\":\"1234\",\"type\":\"withdraw\",\"amount\":200}"
-        },
-        "url": {"raw": "http://localhost:8080/api/transaction"}
-      }
-    },
-    {
-      "name": "Get Balance",
-      "request": {
-        "method": "GET",
-        "url": {"raw": "http://localhost:8080/api/card/balance/4123456789012345"}
-      }
-    },
-    {
-      "name": "Get Transactions",
-      "request": {
-        "method": "GET",
-        "url": {"raw": "http://localhost:8080/api/card/transactions/4123456789012345"}
-      }
-    }
-  ]
-}
-```
-
----
-
-## Response Codes
-
-| Code | Description                 |
-| ---- | --------------------------- |
-| 00   | Success                     |
-| 01   | Invalid request             |
-| 05   | Invalid card / Card blocked |
-| 06   | Invalid PIN                 |
-| 07   | Invalid transaction type    |
-| 08   | Invalid amount              |
-| 99   | Insufficient balance        |
-
----
-
-## Project Structure
-
-```
-.
-├── main.go
-├── go.mod
-├── go.sum
-├── README.md
 ```
